@@ -165,13 +165,20 @@ public final class Posix implements Os {
     public native void setuid(int uid) throws ErrnoException;
     public native void shutdown(FileDescriptor fd, int how) throws ErrnoException;
     public native FileDescriptor socket(int domain, int type, int protocol) throws ErrnoException;
+    public native void socketpair(int domain, int type, int protocol, FileDescriptor fd1, FileDescriptor fd2) throws ErrnoException;
     public native StructStat stat(String path) throws ErrnoException;
     public native StructStatFs statfs(String path) throws ErrnoException;
     public native String strerror(int errno);
     public native void symlink(String oldPath, String newPath) throws ErrnoException;
     public native long sysconf(int name);
     public native void tcdrain(FileDescriptor fd) throws ErrnoException;
-    public native int umask(int mask);
+    public int umask(int mask) {
+        if ((mask & 0777) != mask) {
+            throw new IllegalArgumentException("Invalid umask: " + mask);
+        }
+        return umaskImpl(mask);
+    }
+    private native int umaskImpl(int mask);
     public native StructUtsname uname();
     public native int waitpid(int pid, MutableInt status, int options) throws ErrnoException;
     public int write(FileDescriptor fd, ByteBuffer buffer) throws ErrnoException {

@@ -1168,6 +1168,15 @@ static jobject Posix_socket(JNIEnv* env, jobject, jint domain, jint type, jint p
     return fd != -1 ? jniCreateFileDescriptor(env, fd) : NULL;
 }
 
+static void Posix_socketpair(JNIEnv* env, jobject, jint domain, jint type, jint protocol, jobject javaFd1, jobject javaFd2) {
+    int fds[2];
+    int rc = throwIfMinusOne(env, "socketpair", TEMP_FAILURE_RETRY(socketpair(domain, type, protocol, fds)));
+    if (rc != -1) {
+        jniSetFileDescriptorOfFD(env, javaFd1, fds[0]);
+        jniSetFileDescriptorOfFD(env, javaFd2, fds[1]);
+    }
+}
+
 static jobject Posix_stat(JNIEnv* env, jobject, jstring javaPath) {
     return doStat(env, javaPath, false);
 }
@@ -1219,7 +1228,7 @@ static void Posix_tcdrain(JNIEnv* env, jobject, jobject javaFd) {
     throwIfMinusOne(env, "tcdrain", TEMP_FAILURE_RETRY(tcdrain(fd)));
 }
 
-static jint Posix_umask(JNIEnv*, jobject, jint mask) {
+static jint Posix_umaskImpl(JNIEnv*, jobject, jint mask) {
     return umask(mask);
 }
 
@@ -1341,13 +1350,14 @@ static JNINativeMethod gMethods[] = {
     NATIVE_METHOD(Posix, setuid, "(I)V"),
     NATIVE_METHOD(Posix, shutdown, "(Ljava/io/FileDescriptor;I)V"),
     NATIVE_METHOD(Posix, socket, "(III)Ljava/io/FileDescriptor;"),
+    NATIVE_METHOD(Posix, socketpair, "(IIILjava/io/FileDescriptor;Ljava/io/FileDescriptor;)V"),
     NATIVE_METHOD(Posix, stat, "(Ljava/lang/String;)Llibcore/io/StructStat;"),
     NATIVE_METHOD(Posix, statfs, "(Ljava/lang/String;)Llibcore/io/StructStatFs;"),
     NATIVE_METHOD(Posix, strerror, "(I)Ljava/lang/String;"),
     NATIVE_METHOD(Posix, symlink, "(Ljava/lang/String;Ljava/lang/String;)V"),
     NATIVE_METHOD(Posix, sysconf, "(I)J"),
     NATIVE_METHOD(Posix, tcdrain, "(Ljava/io/FileDescriptor;)V"),
-    NATIVE_METHOD(Posix, umask, "(I)I"),
+    NATIVE_METHOD(Posix, umaskImpl, "(I)I"),
     NATIVE_METHOD(Posix, uname, "()Llibcore/io/StructUtsname;"),
     NATIVE_METHOD(Posix, waitpid, "(ILlibcore/util/MutableInt;I)I"),
     NATIVE_METHOD(Posix, writeBytes, "(Ljava/io/FileDescriptor;Ljava/lang/Object;II)I"),
