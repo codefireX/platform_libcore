@@ -282,14 +282,28 @@ public class OldSocketChannelTest extends TestCase {
     }
 
     public void test_socketChannel_read_DirectByteBuffer() throws InterruptedException, IOException {
+        final ServerSocketChannel ssc = ServerSocketChannel.open();
+        ssc.socket().bind(null, 0);
 
-        ServerThread server = new ServerThread();
+        Thread server = new Thread() {
+            @Override public void run() {
+                try {
+                    for (int i = 0; i < 2; ++i) {
+                        ByteBuffer buf = ByteBuffer.allocate(10);
+                        buf.put(data);
+                        buf.rewind();
+                        ssc.accept().write(buf);
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        };
         server.start();
         Thread.currentThread().sleep(1000);
 
         // First test with array based byte buffer
         SocketChannel sc = SocketChannel.open();
-        sc.connect(server.getLocalSocketAddress());
+        sc.connect(ssc.socket().getLocalSocketAddress());
 
         ByteBuffer buf = ByteBuffer.allocate(data.length);
         buf.limit(data.length / 2);
@@ -305,7 +319,7 @@ public class OldSocketChannelTest extends TestCase {
 
         // Now test with direct byte buffer
         sc = SocketChannel.open();
-        sc.connect(server.getLocalSocketAddress());
+        sc.connect(ssc.socket().getLocalSocketAddress());
 
         buf = ByteBuffer.allocateDirect(data.length);
         buf.limit(data.length / 2);

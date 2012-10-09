@@ -219,8 +219,8 @@ public class URLConnectionTest extends TestCase {
     public void setUp() throws Exception {
         super.setUp();
 
+        port = Support_PortManager.getNextPort();
         server = new Support_TestWebServer();
-        port = server.initServer();
         url = new URL("http://localhost:" + port + "/test1");
         uc = url.openConnection();
         url2 =  new URL("http://localhost:" + port + "/test2");
